@@ -1,0 +1,58 @@
+---
+title: "Generate New .Depth files that have the RSINE alignments set to 0"
+output: html_notebook
+---
+
+read in the .depth files
+```{r}
+WTforward <- read.delim("./WT_depth_files/WTwatson.depth", header=FALSE)
+colnames(WTforward) = c("chrom","pos","depth")
+
+WTreverse <- read.delim("./WT_depth_files/WTcrick.depth", header=FALSE)
+colnames(WTreverse) = c("chrom","pos","depth")
+```
+
+read in the repeat element bed file
+```{r}
+ALL_RepeatElements <- read.delim("./Coding_Gene_BEDs/repeats_mm10.bed", header=FALSE)
+```
+
+
+subset the repeat bed file into + and - strand  
+```{r}
+Positive_rRNA = ALL_RepeatElements[(ALL_RepeatElements$V6 == "+" & grepl("rRNA",ALL_RepeatElements$V4)),]
+Negative_rRNA = ALL_RepeatElements[(ALL_RepeatElements$V6 == "-" & grepl("rRNA",ALL_RepeatElements$V4)),]
+```
+
+go through rRNA repeats and set the depth to 0 at those annotations
+```{r}
+m = dim(Positive_rRNA)
+
+for(i in 1:m[1]){
+  WTforward$depth[(WTforward$chrom %in% Positive_rRNA$V1[i] & WTforward$pos >= Positive_rRNA$V2[i] & WTforward$pos <= Positive_rRNA$V3[i] )] = 0
+ }
+```
+
+
+go through rRNA repeats and set the depth to 0 at those annotations
+```{r}
+m = dim(Negative_rRNA)
+
+for(i in 1:m[1]){
+  WTreverse$depth[(WTreverse$chrom %in% Negative_rRNA$V1[i] & WTreverse$pos >= Negative_rRNA$V2[i] & WTreverse$pos <= Negative_rRNA$V3[i] )] = 0
+ }
+```
+
+save the zero'd files
+```{r}
+write.table(WTforward, file = "./WT_depth_files/WTwatson_norRNA.depth", sep = "\t", row.names = FALSE, quote = FALSE, col.names = FALSE)
+write.table(WTreverse, file = "./WT_depth_files/WTcrick_norRNA.depth", sep = "\t", row.names = FALSE, quote = FALSE, col.names = FALSE)
+```
+
+save the sub-setted bed files for bedtools intersect
+```{r}
+write.table(Positive_rRNA, file = "./Coding_Gene_BEDs/Positive_rRNA.bed", sep = "\t",row.names = FALSE, quote = FALSE, col.names = FALSE)
+write.table(Negative_rRNA, file = "./Coding_Gene_BEDs/Negative_rRNA.bed", sep = "\t",row.names = FALSE, quote = FALSE, col.names = FALSE)
+```
+
+

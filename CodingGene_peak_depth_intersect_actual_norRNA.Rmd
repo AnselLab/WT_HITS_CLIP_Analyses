@@ -1,0 +1,561 @@
+---
+title: "Creating Summary Statistics For Binding b/w miR peaks and lncRNA and other coding annotations"
+output: html_notebook
+---
+
+# Load the necessary packages
+```{r}
+library(ggplot2)
+library(scales)
+library(Biostrings)
+library(BSgenome.Mmusculus.UCSC.mm10)
+```
+
+Read in the depth per nucleotide file
+```{r}
+WTforward <- read.delim("./WT_depth_files/WTwatson_norRNA.depth", header=FALSE)
+colnames(WTforward) = c("chrom","pos","depth")
+
+WTreverse <- read.delim("./WT_depth_files/WTcrick_norRNA.depth", header=FALSE)
+colnames(WTreverse) = c("chrom","pos","depth")
+```
+
+Read in lncRNA peak Bed File where peaks overlapping rRNA are removed
+```{r}
+WT_3pUTR_peaks <- read.delim("./WT_piranha_in3pUTR_noMIR_norRNA_posneg.bed", header=FALSE)
+WT_Exon_peaks <- read.delim("./WT_piranha_inCodingExon_noMIR_norRNA_posneg.bed", header=FALSE)
+WT_Intron_peaks <- read.delim("./WT_piranha_inIntrons_noMIR_norRNA_posneg.bed", header=FALSE)
+WT_WholeGene_peaks <- read.delim("./WT_piranha_inWholeGene_noMIR_norRNA_posneg.bed", header=FALSE)
+WT_LNC_peaks <- read.delim("./WT_piranha_inLNC_noMIR_norRNA_posneg.bed", header=FALSE)
+```
+
+create temporary chunks for the forward strand
+```{r}
+Chrom1_temp_forward = WTforward[(WTforward$chrom %in% "chr1"),]
+Chrom1_GL456211_random_temp_forward = WTforward[(WTforward$chrom %in% "chr1_GL456211_random"),]
+Chrom1_GL456221_random_temp_forward = WTforward[(WTforward$chrom %in% "chr1_GL456221_random"),]
+Chrom10_temp_forward = WTforward[(WTforward$chrom %in% "chr10"),]
+Chrom11_temp_forward = WTforward[(WTforward$chrom %in% "chr11"),]
+Chrom12_temp_forward = WTforward[(WTforward$chrom %in% "chr12"),]
+Chrom13_temp_forward = WTforward[(WTforward$chrom %in% "chr13"),]
+Chrom14_temp_forward = WTforward[(WTforward$chrom %in% "chr14"),]
+Chrom15_temp_forward = WTforward[(WTforward$chrom %in% "chr15"),]
+Chrom16_temp_forward = WTforward[(WTforward$chrom %in% "chr16"),]
+Chrom17_temp_forward = WTforward[(WTforward$chrom %in% "chr17"),]
+Chrom18_temp_forward = WTforward[(WTforward$chrom %in% "chr18"),]
+Chrom19_temp_forward = WTforward[(WTforward$chrom %in% "chr19"),]
+Chrom2_temp_forward = WTforward[(WTforward$chrom %in% "chr2"),]
+Chrom3_temp_forward = WTforward[(WTforward$chrom %in% "chr3"),]
+Chrom4_temp_forward = WTforward[(WTforward$chrom %in% "chr4"),]
+Chrom4_GL456216_random_temp_forward = WTforward[(WTforward$chrom %in% "chr4_GL456216_random"),]
+Chrom4_GL456350_random_temp_forward = WTforward[(WTforward$chrom %in% "chr4_GL456350_random"),]
+Chrom4_JH584293_random_temp_forward = WTforward[(WTforward$chrom %in% "chr4_JH584293_random"),]
+Chrom4_JH584295_random_temp_forward = WTforward[(WTforward$chrom %in% "chr4_JH584295_random"),]
+Chrom5_temp_forward = WTforward[(WTforward$chrom %in% "chr5"),]
+Chrom5_GL456354_random_temp_forward = WTforward[(WTforward$chrom %in% "chr5_GL456354_random"),] 
+Chrom5_JH584297_random_temp_forward = WTforward[(WTforward$chrom %in% "chr5_JH584297_random"),] 
+Chrom6_temp_forward = WTforward[(WTforward$chrom %in% "chr6"),] 
+Chrom7_temp_forward = WTforward[(WTforward$chrom %in% "chr7"),] 
+Chrom8_temp_forward = WTforward[(WTforward$chrom %in% "chr8"),] 
+Chrom9_temp_forward = WTforward[(WTforward$chrom %in% "chr9"),] 
+ChromM_temp_forward = WTforward[(WTforward$chrom %in% "chrM"),]  
+ChromUn_GL456370_temp_forward = WTforward[(WTforward$chrom %in% "chrUn_GL456370"),] 
+ChromUn_GL456387_temp_forward = WTforward[(WTforward$chrom %in% "chrUn_GL456387"),]  
+ChromUn_JH584304_temp_forward = WTforward[(WTforward$chrom %in% "chrUn_JH584304"),]  
+ChromX_temp_forward = WTforward[(WTforward$chrom %in% "chrX"),] 
+ChromX_GL456233_random_temp_forward = WTforward[(WTforward$chrom %in% "chrX_GL456233_random"),] 
+ChromY_temp_forward = WTforward[(WTforward$chrom %in% "chrY"),] 
+```
+
+create temporary chunks for the reverse strand
+```{r}
+Chrom1_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr1"),]
+Chrom1_GL456211_random_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr1_GL456211_random"),]
+Chrom1_GL456221_random_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr1_GL456221_random"),]
+Chrom10_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr10"),]
+Chrom11_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr11"),]
+Chrom12_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr12"),]
+Chrom13_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr13"),]
+Chrom14_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr14"),]
+Chrom15_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr15"),]
+Chrom16_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr16"),]
+Chrom17_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr17"),]
+Chrom18_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr18"),]
+Chrom19_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr19"),]
+Chrom2_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr2"),]
+Chrom3_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr3"),]
+Chrom4_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr4"),]
+Chrom4_GL456216_random_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr4_GL456216_random"),]
+Chrom4_GL456350_random_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr4_GL456350_random"),]
+Chrom4_JH584293_random_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr4_JH584293_random"),]
+Chrom4_JH584295_random_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr4_JH584295_random"),]
+Chrom5_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr5"),]
+Chrom5_GL456354_random_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr5_GL456354_random"),] 
+Chrom5_JH584297_random_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr5_JH584297_random"),] 
+Chrom6_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr6"),] 
+Chrom7_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr7"),] 
+Chrom8_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr8"),] 
+Chrom9_temp_reverse = WTreverse[(WTreverse$chrom %in% "chr9"),] 
+ChromM_temp_reverse = WTreverse[(WTreverse$chrom %in% "chrM"),]  
+ChromUn_GL456370_temp_reverse = WTreverse[(WTreverse$chrom %in% "chrUn_GL456370"),] 
+ChromUn_GL456387_temp_reverse = WTreverse[(WTreverse$chrom %in% "chrUn_GL456387"),]  
+ChromUn_JH584304_temp_reverse = WTreverse[(WTreverse$chrom %in% "chrUn_JH584304"),]  
+ChromX_temp_reverse = WTreverse[(WTreverse$chrom %in% "chrX"),] 
+ChromX_GL456233_random_temp_reverse = WTreverse[(WTreverse$chrom %in% "chrX_GL456233_random"),] 
+ChromY_temp_reverse = WTreverse[(WTreverse$chrom %in% "chrY"),] 
+```
+
+
+going to treat the chunks below this as 
+```{r}
+WT_peaks = WT_LNC_peaks #this is changed for each annotation type
+```
+
+############################# start "function"
+
+generate data table to populate summary binding for each transcript
+```{r}
+z = dim(WT_peaks)
+lncRNA_num = z[1] #name is now outdated but keep it for simplicity
+lncRNA_peak_summary = data.frame(chrom = character(length = lncRNA_num), pos_start = numeric(length = lncRNA_num), pos_end = numeric(length = lncRNA_num), total_depth = numeric(length = lncRNA_num),geneid = character(length = lncRNA_num), depth_norm = numeric(length =lncRNA_num), 
+                          stringsAsFactors = FALSE  )
+```
+
+
+
+```{r}
+for(i in 1:z[1]){
+  if(WT_peaks$V1[i]=="chr1" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom1_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr1_GL456211_random" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom1_GL456211_random_temp_forward
+  }
+
+  if(WT_peaks$V1[i]== "chr1_GL456221_random" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom1_GL456221_random_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr10" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom10_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr11" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom11_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr12" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom12_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr13" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom13_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr14" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom14_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr15" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom15_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr16" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom16_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr17" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom17_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr18" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom18_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr19" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom19_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr2" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom2_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr3" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom3_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr4" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom4_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr4_GL456216_random" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom4_GL456216_random_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr4_GL456350_random" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom4_GL456350_random_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr4_JH584293_random" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom4_JH584293_random_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr4_JH584295_random" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom4_JH584295_random_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr5" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom5_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr5_GL456354_random" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom5_GL456354_random_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr5_JH584297_random" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom5_JH584297_random_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr6" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom6_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr7" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom7_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr8" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom8_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chr9" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = Chrom9_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chrM" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = ChromM_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chrUn_GL456370" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = ChromUn_GL456370_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chrUn_GL456387" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = ChromUn_GL456387_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chrUn_JH584304" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = ChromUn_JH584304_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chrX" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = ChromX_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chrX_GL456233_random" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = ChromX_GL456233_random_temp_forward
+  }
+
+  if(WT_peaks$V1[i]=="chrY" & WT_peaks$V6[i]=="+"){
+    chrom_chunk_lncRNA_temp = ChromY_temp_forward
+  }
+
+  
+    
+  if(WT_peaks$V1[i]=="chr1" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom1_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr1_GL456211_random" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom1_GL456211_random_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]== "chr1_GL456221_random" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom1_GL456221_random_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr10" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom10_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr11" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom11_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr12" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom12_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr13" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom13_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr14" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom14_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr15" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom15_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr16" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom16_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr17" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom17_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr18" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom18_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr19" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom19_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr2" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom2_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr3" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom3_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr4" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom4_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr4_GL456216_random" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom4_GL456216_random_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr4_GL456350_random" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom4_GL456350_random_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr4_JH584293_random" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom4_JH584293_random_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr4_JH584295_random" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom4_JH584295_random_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr5" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom5_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr5_GL456354_random" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom5_GL456354_random_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr5_JH584297_random" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom5_JH584297_random_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr6" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom6_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr7" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom7_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr8" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom8_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chr9" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = Chrom9_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chrM" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = ChromM_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chrUn_GL456370" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = ChromUn_GL456370_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chrUn_GL456387" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = ChromUn_GL456387_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chrUn_JH584304" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = ChromUn_JH584304_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chrX" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = ChromX_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chrX_GL456233_random" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = ChromX_GL456233_random_temp_reverse
+  }
+
+  if(WT_peaks$V1[i]=="chrY" & WT_peaks$V6[i]=="-"){
+    chrom_chunk_lncRNA_temp = ChromY_temp_reverse
+  }
+    
+   #create temp frame to merge into
+   gene_temp_depth = data.frame(location = c(WT_peaks$V2[i]:WT_peaks$V3[i]))
+   
+   gene_temp_depth = merge(gene_temp_depth,chrom_chunk_lncRNA_temp,by.x = "location",by.y = "pos",all.x = TRUE)
+   gene_temp_depth[is.na(gene_temp_depth)] = 0
+   
+   lncRNA_peak_summary$chrom[i] = WT_peaks$V1[i]
+   lncRNA_peak_summary$pos_start[i] = WT_peaks$V2[i]
+   lncRNA_peak_summary$pos_end[i] = WT_peaks$V3[i]
+   lncRNA_peak_summary$total_depth[i] = sum(as.numeric(gene_temp_depth$depth))
+   lncRNA_peak_summary$geneid[i] = WT_peaks$V11[i]
+   lncRNA_peak_summary$depth_norm[i] = lncRNA_peak_summary$total_depth[i]/(WT_peaks$V3[i]-WT_peaks$V2[i])
+   lncRNA_peak_summary$length[i] = WT_peaks$V3[i] - WT_peaks$v2[i]
+   
+   
+   
+   message('\r',i,appendLF = FALSE)
+   
+  }
+
+```
+
+################# End "Function"
+
+```{r}
+LNC_peak_summary = lncRNA_peak_summary #this is changed with each annotation type
+```
+
+done first function
+Intron
+UTR
+Exon
+whole_gene
+lnc
+
+
+
+##### begin next function
+
+
+
+add the sequence of the peak
+```{r}
+lncRNA_peak_summary = LNC_peak_summary #this is changed with each annotation type
+
+
+z = dim(lncRNA_peak_summary)
+for(i in 1:z[1]){
+  lncRNA_peak_summary$forward_seq[i] = as.character(Biostrings::getSeq(BSgenome.Mmusculus.UCSC.mm10, as.character(lncRNA_peak_summary$chrom[i]), lncRNA_peak_summary$pos_start[i], lncRNA_peak_summary$pos_end[i]))
+  lncRNA_peak_summary$rev_seq[i] = as.character(Biostrings::reverseComplement(DNAString(lncRNA_peak_summary$forward_seq[i])))
+}
+
+lncRNA_peak_summary$miR_15_16_6mer_fw = grepl("TAGCAG",lncRNA_peak_summary$forward_seq)
+lncRNA_peak_summary$miR_15_16_6mer_rv = grepl("TAGCAG",lncRNA_peak_summary$rev_seq)
+
+
+LNC_peak_summary = lncRNA_peak_summary #this is changed with each annotation type
+```
+
+## end 
+
+done second function
+intron
+UTR
+Exon
+WholeGene
+lnc
+
+
+choose to keep one entry per peak (peaks always correspond to a singular genomic location whereas suming reads across genes may result in overlaps the exact genomic locations do change)
+```{r}
+WholeGene_peak_summary_noDup = WholeGene_peak_summary %>% distinct(chrom,pos_start,pos_end,.keep_all=TRUE)
+Intron_peak_summary_noDup = Intron_peak_summary %>% distinct(chrom,pos_start,pos_end,.keep_all=TRUE)
+Exon_peak_summary_noDup = Exon_peak_summary %>% distinct(chrom,pos_start,pos_end,.keep_all=TRUE)
+UTR_peak_summary_noDup = UTR_peak_summary %>% distinct(chrom,pos_start,pos_end,.keep_all=TRUE)
+LNC_peak_summary_noDup = LNC_peak_summary %>% distinct(chrom,pos_start,pos_end,.keep_all=TRUE)
+```
+
+```{r}
+WholeGene_peak_summary = WholeGene_peak_summary_noDup
+Intron_peak_summary = Intron_peak_summary_noDup
+Exon_peak_summary = Exon_peak_summary_noDup
+UTR_peak_summary = UTR_peak_summary_noDup
+LNC_peak_summary = LNC_peak_summary_noDup
+```
+
+
+
+save the peak summary file
+```{r}
+saveRDS(WholeGene_peak_summary,file = "./WholeGene_peak_summary_directional_norRNA.rds")
+saveRDS(Intron_peak_summary,file = "./Intron_peak_summary_directional_norRNA.rds")
+saveRDS(Exon_peak_summary,file = "./Exon_peak_summary_directional_norRNA.rds")
+saveRDS(UTR_peak_summary,file = "./UTR_peak_summary_directional_norRNA.rds")
+saveRDS(LNC_peak_summary,file = "./LNC_peak_summary_directional_norRNA.rds")
+```
+
+```{r}
+WholeGene_peak_summary = readRDS(file = "./WholeGene_peak_summary_directional_norRNA.rds")
+Intron_peak_summary = readRDS(file = "./Intron_peak_summary_directional_norRNA.rds")
+Exon_peak_summary = readRDS(file = "./Exon_peak_summary_directional_norRNA.rds")
+UTR_peak_summary = readRDS(file = "./UTR_peak_summary_directional_norRNA.rds")
+lncRNA_peak_summary = readRDS(file = "./lncRNA_peak_summary_directional_norRNA.rds")
+```
+
+
+
+how many genes are above malat1's 15/16 site?
+```{r}
+table(WholeGene_peak_summary$depth_norm>364.8875)
+```
+
+
+make a composite data frame of all the peaks
+```{r}
+WholeGene_peak_summary$annotation = "WholeCodingGene"
+Intron_peak_summary$annotation = "Intron"
+Exon_peak_summary$annotation = "Exon"
+UTR_peak_summary$annotation  = "UTR"
+LNC_peak_summary$annotation = "lncRNA"
+```
+
+
+```{r}
+All_peak_summary = rbind(WholeGene_peak_summary, Intron_peak_summary)
+All_peak_summary = rbind(All_peak_summary, Exon_peak_summary)
+All_peak_summary = rbind(All_peak_summary, UTR_peak_summary)
+All_peak_summary = rbind(All_peak_summary, LNC_peak_summary)
+```
+
+
+
+plot distribution of depths
+```{r}
+pdf(file = "./Malat1_1516_peak_depth_allAnnotation_norRNA.pdf", width = 9, height = 5)
+ggplot(data = All_peak_summary, aes(x = depth_norm,color=annotation)) + stat_bin(geom="step", position="identity", bins = 100) + scale_color_manual(values  = c("Exon" = "maroon2", "Intron" = "maroon4", "lncRNA" = "black", "UTR" = "royalblue3", "WholeCodingGene" = "royalblue4"))+ scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),labels = trans_format("log10", math_format(10^.x))) + geom_vline(xintercept = 364, color = "grey40") + geom_vline(xintercept = 189, color = "grey55")+ ylab("Number of CLIP Peaks") + annotate(geom="label", x = 400, y = 150, hjust = 0, label ="Malat1 miR-15/16 Site \n #121 Highest Bound Peak \n Top 2.3% of All Evaluated \n Called Peaks", fill = "white") + annotate(geom="label", x = 189, y = 500, label="Malat1 \n miR-204", fill = "white")  + xlab("Normalized Depth (Reads/nt)")
+
+dev.off()
+
+```
+
+add whether there are seed sides for miR-22, miR-200, miR-195
+```{r}
+lncRNA_peak_summary$miR_22_6mer_fw = grepl("AGCTGC",lncRNA_peak_summary$forward_seq)
+lncRNA_peak_summary$miR_22_6mer_rv = grepl("AGCTGC",lncRNA_peak_summary$rev_seq)
+
+lncRNA_peak_summary$miR_200_6mer_fw = grepl("AATACT",lncRNA_peak_summary$forward_seq)
+lncRNA_peak_summary$miR_200_6mer_rv = grepl("AATACT",lncRNA_peak_summary$rev_seq)
+
+lncRNA_peak_summary$miR_195_6mer_fw = grepl("TAGCAG",lncRNA_peak_summary$forward_seq)
+lncRNA_peak_summary$miR_195_6mer_rv = grepl("TAGCAG",lncRNA_peak_summary$rev_seq)
+```
+
+
+
+
+
+
+
+
